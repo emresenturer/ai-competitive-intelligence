@@ -1,0 +1,500 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Competitive Intelligence Report</title>
+<meta name="description" content="Enter your company and competitors, paste their latest updates, and get a competitive intelligence report: signals, threat levels, a positioning map, opportunities and recommended responses. Bring your own Anthropic key.">
+<meta property="og:title" content="Competitive Intelligence Report">
+<meta property="og:description" content="Turn pasted competitor updates into per-competitor signals, threat levels with rationale, a positioning map, opportunities and responses.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://emresenturer.github.io/ai-competitive-intelligence/">
+<meta name="theme-color" content="#1e2a4a">
+<style>
+:root{
+  --bg:#f5f6fa; --card:#ffffff; --ink:#151a2d; --soft:#5b6280; --line:#dde1ee; --accent:#3b4fd8; --accent-ink:#fff;
+  --warn-bg:#fff7e0; --warn-ink:#6b4e00; --err-bg:#fdecec; --err-ink:#8a1c1c; --hi:#b42318; --med:#b54708; --lo:#2e7d32; --chip:#eef0f8;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#0f1220; --card:#181c30; --ink:#e8eaf5; --soft:#a2a8c6; --line:#2c3252; --accent:#8c9bff; --accent-ink:#0f1220;
+    --warn-bg:#3a2f0b; --warn-ink:#f5d77a; --err-bg:#3b1515; --err-ink:#f3a3a3; --hi:#ff8a80; --med:#ffb74d; --lo:#81c784; --chip:#22273f; }
+}
+*{box-sizing:border-box}
+html,body{margin:0;overflow-x:hidden}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5;font-size:16px}
+a{color:var(--accent)}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.vh{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.wrap{max-width:1280px;margin:0 auto;padding:16px}
+header h1{font-size:clamp(24px,4vw,34px);margin:8px 0 4px;line-height:1.15}
+header p.lead{margin:0;color:var(--soft);font-size:17px}
+.notice{margin:12px 0 0;padding:10px 14px;border-radius:10px;background:var(--warn-bg);color:var(--warn-ink);font-size:14px}
+.layout{display:grid;grid-template-columns:1fr;gap:16px;margin-top:16px}
+@media (min-width:1000px){.layout{grid-template-columns:minmax(380px,470px) minmax(0,1fr);align-items:start}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;min-width:0}
+label{display:block;font-weight:600;margin:12px 0 6px}
+.hint{font-weight:400;color:var(--soft);font-size:13px}
+textarea,input[type=text],input[type=password],select{width:100%;font:inherit;color:inherit;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+textarea{min-height:110px;resize:vertical;font-size:14px;line-height:1.45}
+.comp{border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:10px;background:var(--bg)}
+.comp textarea,.comp input{background:var(--card)}
+.comp-head{display:flex;gap:8px;align-items:flex-end}
+.comp-head > div{flex:1;min-width:0}
+.comp-head label{margin-top:0}
+.comp .x{flex:none}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.btn{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:9px 14px;cursor:pointer;min-height:42px}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:700;font-size:16px;padding:12px 18px}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.meta{font-size:13px;color:var(--soft);margin-top:6px}
+details.key{margin-top:14px;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+details.key summary{cursor:pointer;font-weight:600}
+.keyrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.keyrow input{flex:1 1 200px;min-width:0}
+.status{margin-top:12px;padding:10px 12px;border-radius:10px;font-size:14px}
+.status.err{background:var(--err-bg);color:var(--err-ink)}
+.status.info{background:var(--chip)}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:sp .8s linear infinite;vertical-align:-2px;margin-right:6px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.empty{color:var(--soft);text-align:center;padding:40px 16px}
+.empty b{display:block;color:var(--ink);font-size:18px;margin-bottom:6px}
+.outbar{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:center;margin-bottom:10px}
+.outbar .btns{margin:0}
+.tagline{font-size:13px;color:var(--soft)}
+#report h2{font-size:24px;margin:4px 0 8px;line-height:1.25}
+#report h3{font-size:17px;margin:22px 0 8px;padding-bottom:4px;border-bottom:1px solid var(--line)}
+#report h4{font-size:16px;margin:0 0 6px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+#report ul,#report ol{margin:6px 0;padding-left:22px}
+#report li{margin:5px 0}
+.cc{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:10px 0;break-inside:avoid}
+.cc p{margin:6px 0}
+.src{font-size:12px;color:var(--soft);white-space:nowrap}
+.type{display:inline-block;font-size:11px;background:var(--chip);border-radius:6px;padding:1px 6px;margin-right:6px;color:var(--soft);font-weight:700;text-transform:uppercase;letter-spacing:.03em}
+.pill{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;border-radius:999px;padding:2px 8px;border:1px solid currentColor}
+.pill.High{color:var(--hi)}.pill.Medium{color:var(--med)}.pill.Low{color:var(--lo)}
+.tblwrap{overflow-x:auto;max-width:100%}
+.tbl{width:100%;border-collapse:collapse;font-size:14px;min-width:560px}
+.tbl th,.tbl td{border:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}
+.tbl th{background:var(--chip)}
+.tbl tr.you td{background:color-mix(in srgb,var(--accent) 10%,transparent);font-weight:600}
+.sources{margin-top:22px;font-size:13px;color:var(--soft)}
+.sources summary{cursor:pointer}
+.badge{display:inline-block;font-size:12px;background:var(--chip);border-radius:6px;padding:2px 8px;margin-left:6px;color:var(--soft);font-weight:400}
+.raw p{margin:8px 0}
+footer{margin:28px 0 10px;text-align:center;color:var(--soft);font-size:14px}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:14px;z-index:9}
+.printhead{display:none}
+@media print{
+  body{background:#fff;color:#000;font-size:11pt}
+  header,.notice,#inputCard,.outbar .btns,footer,.toast,#status{display:none !important}
+  .layout{display:block;margin:0}
+  .card{border:0;padding:0}
+  #report h3{break-after:avoid;border-color:#999}
+  .tbl{min-width:0}
+  .tblwrap{overflow:visible}
+  .sources summary{list-style:none;font-weight:700;color:#000}
+  a{color:#000}
+  .printhead{display:block;font-size:10pt;color:#444;margin-bottom:8pt}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Competitive Intelligence Report</h1>
+    <p class="lead">Add your company and competitors, paste what they announced, and get signals, threat levels, a positioning map and recommended responses.</p>
+    <p class="notice" role="note"><b>Analyzes only what you paste.</b> This tool does not browse the web, open links, or check facts. Paste the update text, not just URLs.</p>
+  </header>
+
+  <div class="layout">
+    <section class="card" id="inputCard" aria-label="Input">
+      <label for="you" style="margin-top:0">Your company</label>
+      <input type="text" id="you" placeholder="e.g. Brightline Lending">
+      <label for="youDesc">What you offer and to whom <span class="hint">Optional, improves positioning and responses.</span></label>
+      <input type="text" id="youDesc" placeholder="e.g. digital working capital loans for small businesses">
+
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:16px;gap:8px;flex-wrap:wrap">
+        <b>Competitors and their updates</b><span class="hint" id="compCount"></span>
+      </div>
+      <div id="comps"></div>
+      <div class="btns">
+        <button class="btn" id="addComp" type="button">+ Add competitor</button>
+        <button class="btn" id="sampleBtn" type="button">Load sample</button>
+        <button class="btn" id="exampleBtn" type="button">See example report</button>
+        <button class="btn" id="clearBtn" type="button">Clear</button>
+      </div>
+
+      <label for="period">Period</label>
+      <select id="period">
+        <option>This week</option><option>Last 2 weeks</option><option>This month</option><option>This quarter</option>
+      </select>
+
+      <details class="key" id="keyBox">
+        <summary>Anthropic API key <span class="badge" id="keyBadge">not set</span></summary>
+        <p class="meta">Your key stays in this browser and is sent only to api.anthropic.com. Get one at <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com/settings/keys</a>.</p>
+        <div class="keyrow">
+          <input type="password" id="apiKey" placeholder="sk-ant-..." autocomplete="off" spellcheck="false" aria-label="Anthropic API key">
+          <button class="btn" id="saveKey" type="button">Save</button>
+          <button class="btn" id="forgetKey" type="button">Forget</button>
+        </div>
+      </details>
+
+      <div class="btns">
+        <button class="btn primary" id="genBtn" type="button">Generate report</button>
+        <button class="btn" id="cancelBtn" type="button" style="display:none">Cancel</button>
+      </div>
+      <div id="status" role="status" aria-live="polite"></div>
+    </section>
+
+    <section class="card" aria-labelledby="outTitle">
+      <div class="outbar">
+        <span class="tagline" id="outTitle">Report</span>
+        <div class="btns">
+          <button class="btn" id="copyBtn" type="button" disabled>Copy Markdown</button>
+          <button class="btn" id="dlBtn" type="button" disabled>Download .md</button>
+          <button class="btn" id="printBtn" type="button" disabled>Print / PDF</button>
+        </div>
+      </div>
+      <div id="report">
+        <div class="empty"><b>Your report will appear here.</b>Fill in competitors or click "Load sample", then Generate. No key yet? Click "See example report".</div>
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    Built by <a href="https://github.com/emresenturer">Emre Senturer</a> ·
+    <a href="https://github.com/emresenturer/ai-competitive-intelligence">Source on GitHub</a> ·
+    Runs in your browser. Output is AI generated: verify before sharing.
+  </footer>
+</div>
+
+<script>
+(() => {
+'use strict';
+const KEY_NAME = 'competitive_intel_anthropic_key';
+const MAX_COMPS = 6;
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+const SAMPLE = {
+  you: 'Brightline Lending (fictional)', youDesc: 'digital working capital loans for small businesses, decisions within 24 hours',
+  comps: [
+    {name:'Kestrel Bank (fictional)', text:`Launched an AI powered lending platform for small businesses that gives a credit decision in under 10 minutes for loans up to a set limit.
+
+Partnered with a major accounting software provider so customers can pre-fill applications with their books.
+
+Job posts show 30 open data science and credit modeling roles.`},
+    {name:'Fernpay (fictional)', text:`Added revenue-based financing for online sellers inside its payments dashboard, repaid as a share of daily sales.
+
+Announced expansion to two new countries next year.
+
+Cut merchant onboarding from 3 days to same day.`},
+    {name:'Orbit Credit (fictional)', text:`Paused new merchant cash advance originations while it tightens credit criteria.
+
+CEO interview: "profitability over growth" for the next 12 months.
+
+Launched a free cash flow forecasting tool for existing customers.`}
+  ]
+};
+
+const EXAMPLE = {
+  headline: 'Speed and embedded distribution are the new battleground in SME lending',
+  summary: 'Kestrel Bank now beats Brightline on decision speed and gains a data advantage through accounting integration. Fernpay is moving credit into the payments flow for online sellers. Orbit Credit is retreating, which opens room to win its customers.',
+  competitors: [
+    {name:'Kestrel Bank (fictional)', signals:[
+      {type:'Product', signal:'AI lending platform with decisions in under 10 minutes.', sources:['C1.1']},
+      {type:'Partnership', signal:'Accounting software integration pre-fills applications.', sources:['C1.2']},
+      {type:'Hiring', signal:'30 open data science and credit modeling roles.', sources:['C1.3']}],
+      threat_level:'High', threat_rationale:'Directly attacks our 24 hour decision promise with a faster product, plus a data partnership that lowers application friction. Hiring signals continued investment.', positioning:'Incumbent bank turning speed and data into a moat.'},
+    {name:'Fernpay (fictional)', signals:[
+      {type:'Product', signal:'Revenue-based financing inside the payments dashboard.', sources:['C2.1']},
+      {type:'Market', signal:'Expanding to two new countries next year.', sources:['C2.2']},
+      {type:'Product', signal:'Same day merchant onboarding.', sources:['C2.3']}],
+      threat_level:'Medium', threat_rationale:'Strong for online sellers already on Fernpay, but limited to its payments base. Threat grows if it opens financing to non-payments customers.', positioning:'Embedded finance for e-commerce sellers.'},
+    {name:'Orbit Credit (fictional)', signals:[
+      {type:'Market', signal:'Paused new merchant cash advance originations.', sources:['C3.1']},
+      {type:'Strategy', signal:'Leadership prioritizing profitability over growth.', sources:['C3.2']},
+      {type:'Product', signal:'Free cash flow forecasting tool for existing customers.', sources:['C3.3']}],
+      threat_level:'Low', threat_rationale:'Pulling back from new lending. Its forecasting tool may retain customers but does not compete for new loans.', positioning:'Retreating to its existing book.'}
+  ],
+  positioning_map: [
+    {company:'Brightline Lending (fictional)', segment:'Small businesses', core_offer:'Working capital loans', differentiator:'24 hour decisions, digital first', momentum:'Steady'},
+    {company:'Kestrel Bank (fictional)', segment:'Small businesses', core_offer:'AI powered SME loans', differentiator:'Under 10 minute decisions, accounting data', momentum:'Rising'},
+    {company:'Fernpay (fictional)', segment:'Online sellers', core_offer:'Revenue-based financing', differentiator:'Embedded in payments, same day onboarding', momentum:'Rising'},
+    {company:'Orbit Credit (fictional)', segment:'Existing merchants', core_offer:'Merchant cash advance (paused)', differentiator:'Cash flow forecasting tool', momentum:'Slowing'}
+  ],
+  opportunities: [
+    {opportunity:'Win Orbit Credit customers who need new funding', rationale:'Orbit paused originations, so its merchants need an alternative now.'},
+    {opportunity:'Serve sellers outside Fernpay\'s payments base', rationale:'Fernpay financing only reaches its own payments users.'},
+    {opportunity:'Compete on service where Kestrel competes on automation', rationale:'Fast automated decisions can leave borderline applicants without a human path.'}
+  ],
+  responses: [
+    {response:'Cut decision time for standard applications to under 1 hour using existing bank feed data.', priority:'Now', owner:'Head of Credit', counters:'Kestrel Bank'},
+    {response:'Launch a targeted switching offer and outreach for merchants affected by the Orbit pause.', priority:'Now', owner:'Head of Growth', counters:'Orbit Credit'},
+    {response:'Explore integrations with e-commerce and accounting platforms to pre-fill applications.', priority:'Next', owner:'Head of Partnerships', counters:'Kestrel Bank, Fernpay'}
+  ],
+  watch: ['Kestrel decision limits and approval rates', 'Fernpay opening financing to non-payments customers', 'Whether Orbit restarts originations'],
+  coverage_gaps: ['No information on competitor pricing or approval rates.', 'No customer feedback or win/loss data for Brightline.']
+};
+
+const SYSTEM_PROMPT = `You are a senior competitive intelligence analyst.
+Analyze the competitor news and updates the user provides about their competitors.
+
+Identify:
+- Product strategy changes
+- Market positioning
+- New partnerships
+- Strategic implications
+
+Then produce a concise executive competitive intelligence report for the user's company.
+
+Rules:
+- Use ONLY the updates the user provides. Do not add outside facts, figures, names or dates. You cannot browse the web; if an update is only a URL, say little about it.
+- Updates are labeled like C2.3 (competitor 2, update 3). Cite those labels in every "sources" array.
+- Threat level is the threat to the user's company specifically: High, Medium or Low, with a rationale that names the evidence.
+- The positioning map must include the user's company as the first row, then each competitor. Use "Unclear" where the input does not say.
+- Momentum is one of Rising, Steady, Slowing, Unclear.
+- Responses are concrete moves for the user's company with priority Now, Next or Later and an owner role (never a named person).
+- Plain business English. Do not use em dashes or en dashes; use commas, colons or periods.
+
+Return ONLY a JSON object, no prose and no code fences, with exactly this shape:
+{
+  "headline": "one line, max 14 words",
+  "summary": "2 to 3 sentences",
+  "competitors": [{"name": "", "signals": [{"type": "Product|Partnership|Market|Pricing|Hiring|Strategy|Other", "signal": "", "sources": ["C1.1"]}], "threat_level": "High|Medium|Low", "threat_rationale": "", "positioning": "one line"}],
+  "positioning_map": [{"company": "", "segment": "", "core_offer": "", "differentiator": "", "momentum": "Rising|Steady|Slowing|Unclear"}],
+  "opportunities": [{"opportunity": "", "rationale": ""}],
+  "responses": [{"response": "", "priority": "Now|Next|Later", "owner": "", "counters": "competitor names"}],
+  "watch": [""],
+  "coverage_gaps": [""]
+}
+Limits: up to 5 signals per competitor, up to 5 opportunities, up to 6 responses, up to 5 watch items.`;
+
+/* ---------- competitor inputs ---------- */
+let seq = 0;
+function addComp(name = '', text = ''){
+  const n = $('comps').children.length; if (n >= MAX_COMPS) return null;
+  const id = ++seq;
+  const d = document.createElement('div'); d.className = 'comp';
+  d.innerHTML = `<div class="comp-head"><div><label for="cn${id}">Competitor name</label><input type="text" id="cn${id}" class="cname" placeholder="e.g. Kestrel Bank"></div>
+    <button class="btn x" type="button" aria-label="Remove this competitor">Remove</button></div>
+    <label for="ct${id}">Updates <span class="hint">News, launches, partnerships, hiring, notes. Blank line between updates.</span></label>
+    <textarea id="ct${id}" class="ctext" placeholder="Paste updates for this competitor"></textarea>`;
+  d.querySelector('.cname').value = name; d.querySelector('.ctext').value = text;
+  d.querySelector('.x').addEventListener('click', () => { d.remove(); if (!$('comps').children.length) addComp(); refreshCount(); });
+  d.addEventListener('input', refreshCount);
+  $('comps').appendChild(d); refreshCount(); return d;
+}
+function readComps(){
+  return [...$('comps').children].map(d => ({name:d.querySelector('.cname').value.trim(), text:d.querySelector('.ctext').value.trim()}))
+    .filter(c => c.name || c.text).map((c, i) => ({name:c.name || `Competitor ${i + 1}`, updates:splitUpdates(c.text)}));
+}
+function splitUpdates(t){
+  t = t.replace(/\r/g, '').trim(); if (!t) return [];
+  let parts = t.split(/\n\s*\n/).map(s => s.trim()).filter(Boolean);
+  if (parts.length === 1 && parts[0].split('\n').length > 1) parts = parts[0].split('\n').map(s => s.replace(/^\s*([-*•]|\d+[.)])\s+/, '').trim()).filter(Boolean);
+  return parts.slice(0, 20);
+}
+function refreshCount(){
+  const cs = readComps(); const n = $('comps').children.length;
+  const ups = cs.reduce((a, c) => a + c.updates.length, 0);
+  $('compCount').textContent = `${cs.length} competitor${cs.length === 1 ? '' : 's'} · ${ups} update${ups === 1 ? '' : 's'}`;
+  $('addComp').disabled = n >= MAX_COMPS; $('addComp').textContent = n >= MAX_COMPS ? `Max ${MAX_COMPS} competitors` : '+ Add competitor';
+}
+$('addComp').addEventListener('click', () => { const d = addComp(); d && d.querySelector('.cname').focus(); });
+function loadSample(){
+  $('comps').innerHTML = ''; $('you').value = SAMPLE.you; $('youDesc').value = SAMPLE.youDesc;
+  SAMPLE.comps.forEach(c => addComp(c.name, c.text));
+}
+$('sampleBtn').addEventListener('click', loadSample);
+$('clearBtn').addEventListener('click', () => { $('comps').innerHTML = ''; $('you').value = ''; $('youDesc').value = ''; addComp(); addComp(); setStatus(''); });
+addComp(); addComp();
+
+/* ---------- key ---------- */
+const getKey = () => { try { return localStorage.getItem(KEY_NAME) || ''; } catch(e){ return ''; } };
+function refreshKey(){ const k = getKey(); $('keyBadge').textContent = k ? 'saved in this browser' : 'not set'; if (k) $('apiKey').value = k; }
+$('saveKey').addEventListener('click', () => {
+  const v = $('apiKey').value.trim(); if (!v){ setStatus('Enter a key first.', 'err'); return; }
+  try { localStorage.setItem(KEY_NAME, v); } catch(e){}
+  refreshKey(); setStatus('Key saved in this browser.', 'info');
+});
+$('forgetKey').addEventListener('click', () => { try { localStorage.removeItem(KEY_NAME); } catch(e){} $('apiKey').value = ''; refreshKey(); setStatus('Key removed from this browser.', 'info'); });
+refreshKey();
+function setStatus(html, kind){ const s = $('status'); if (!html){ s.className = ''; s.innerHTML = ''; return; } s.className = 'status ' + (kind || 'info'); s.innerHTML = html; }
+
+/* ---------- API ---------- */
+let controller = null, current = null;
+function buildUserText(you, youDesc, period, comps){
+  return `Our company: ${you}${youDesc ? ` (${youDesc})` : ''}.
+Period covered: ${period}. Today is ${new Date().toISOString().slice(0, 10)}.
+
+Competitor updates:
+${comps.map((c, i) => `## C${i + 1}: ${c.name}\n${c.updates.length ? c.updates.map((u, j) => `[C${i + 1}.${j + 1}] ${u}`).join('\n') : '(no updates provided)'}`).join('\n\n')}`;
+}
+async function generate(){
+  const you = $('you').value.trim(), youDesc = $('youDesc').value.trim(), period = $('period').value;
+  const comps = readComps();
+  if (!you){ setStatus('Enter your company name, or click "Load sample".', 'err'); $('you').focus(); return; }
+  if (!comps.length || !comps.some(c => c.updates.length)){ setStatus('Add at least one competitor with updates.', 'err'); return; }
+  const key = getKey() || $('apiKey').value.trim();
+  if (!key){ $('keyBox').open = true; setStatus('Add your Anthropic API key to generate a report, or click "See example report" to preview the output.', 'err'); $('apiKey').focus(); return; }
+  controller = new AbortController();
+  $('genBtn').disabled = true; $('cancelBtn').style.display = '';
+  const t0 = Date.now();
+  setStatus(`<span class="spin" aria-hidden="true"></span>Analyzing ${comps.length} competitors. This usually takes 20 to 60 seconds.`, 'info');
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST', signal: controller.signal,
+      headers: {
+        'content-type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-beta': 'server-side-fallback-2026-07-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-opus-5-5',
+        max_tokens: 8000,
+        output_config: { effort: 'medium' },
+        fallbacks: 'default',
+        system: SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: buildUserText(you, youDesc, period, comps) }]
+      })
+    });
+    if (!res.ok){
+      let msg = `Request failed (HTTP ${res.status}).`;
+      try { const err = await res.json(); if (err && err.error && err.error.message) msg = err.error.message; } catch(e){}
+      setStatus(`<b>API error:</b> ${esc(msg)}`, 'err'); return;
+    }
+    const data = await res.json();
+    if (data.stop_reason === 'refusal'){ setStatus('The model declined this request. Try rephrasing or removing sensitive content.', 'err'); return; }
+    const text = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
+    const parsed = parseJSON(text);
+    current = {you, youDesc, period, comps, parsed, raw:text, example:false};
+    render(current);
+    if (data.stop_reason === 'max_tokens') setStatus('The response hit the length limit, so the report may be incomplete. Try fewer updates.', 'err');
+    else if (!parsed) setStatus('The model did not return the expected structure, so the raw text is shown.', 'err');
+    else setStatus(`Done in ${Math.round((Date.now() - t0) / 1000)}s. Based only on the updates you pasted.`, 'info');
+  } catch(e){
+    if (e.name === 'AbortError') setStatus('Cancelled.', 'info');
+    else setStatus(`<b>Network error:</b> ${esc(e.message || e)}. Check your connection and key.`, 'err');
+  } finally { $('genBtn').disabled = false; $('cancelBtn').style.display = 'none'; controller = null; }
+}
+$('genBtn').addEventListener('click', generate);
+$('cancelBtn').addEventListener('click', () => controller && controller.abort());
+$('exampleBtn').addEventListener('click', () => {
+  loadSample(); $('period').value = 'This week';
+  current = {you:SAMPLE.you, youDesc:SAMPLE.youDesc, period:'This week', comps:readComps(), parsed:EXAMPLE, raw:'', example:true};
+  render(current); setStatus('Showing a pre-generated example built from the sample. Add your key and click Generate for a live report.', 'info');
+});
+function parseJSON(text){
+  const t = String(text || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '').trim();
+  const a = t.indexOf('{'), b = t.lastIndexOf('}'); if (a === -1 || b <= a) return null;
+  try { const o = JSON.parse(t.slice(a, b + 1)); return (o && typeof o === 'object') ? o : null; } catch(e){ return null; }
+}
+const arr = v => Array.isArray(v) ? v : [];
+const srcs = s => arr(s).map(String).filter(Boolean).join(', ');
+
+/* ---------- render ---------- */
+const inline = s => s.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+function mini(md){
+  return esc(md).split(/\n{2,}/).map(block => {
+    const lines = block.split('\n');
+    if (lines.every(l => /^\s*([-*]|\d+\.)\s+/.test(l))) return '<ul>' + lines.map(l => `<li>${inline(l.replace(/^\s*([-*]|\d+\.)\s+/, ''))}</li>`).join('') + '</ul>';
+    const h = block.match(/^(#{1,4})\s+(.*)$/);
+    if (h && lines.length === 1) return `<h3>${inline(h[2])}</h3>`;
+    return `<p>${lines.map(inline).join('<br>')}</p>`;
+  }).join('');
+}
+const pill = v => ['High','Medium','Low'].includes(v) ? `<span class="pill ${v}">${v} threat</span>` : '';
+function render(c){
+  const r = $('report'); const o = c.parsed;
+  let h = `<p class="printhead">Competitive intelligence report for ${esc(c.you)} · ${esc(c.period)} · ${new Date().toISOString().slice(0, 10)} · Based only on pasted updates</p>`;
+  if (!o){ r.innerHTML = h + `<div class="raw">${mini(c.raw || 'No text returned.')}</div>` + sourcesHTML(c.comps); enableOut(); return; }
+  h += `<span class="tagline">${c.example ? 'Example report · ' : ''}For ${esc(c.you)} · ${esc(c.period)}</span>`;
+  h += `<h2>${esc(o.headline || 'Competitive intelligence report')}</h2>`;
+  if (o.summary) h += `<p>${esc(o.summary)}</p>`;
+  const cs = arr(o.competitors);
+  if (cs.length){
+    h += '<h3>Competitor signals and threat level</h3>';
+    cs.forEach(x => { x = x || {};
+      h += `<div class="cc"><h4>${esc(x.name)} ${pill(x.threat_level)}</h4>`;
+      if (x.positioning) h += `<p><i>${esc(x.positioning)}</i></p>`;
+      const sg = arr(x.signals);
+      if (sg.length) h += `<ul>${sg.map(s => { s = s || {}; return `<li>${s.type ? `<span class="type">${esc(s.type)}</span>` : ''}${esc(s.signal)}${srcs(s.sources) ? ` <span class="src">[${esc(srcs(s.sources))}]</span>` : ''}</li>`; }).join('')}</ul>`;
+      if (x.threat_rationale) h += `<p><b>Why this threat level:</b> ${esc(x.threat_rationale)}</p>`;
+      h += '</div>';
+    });
+  }
+  const pm = arr(o.positioning_map);
+  if (pm.length){
+    h += `<h3>Positioning map</h3><div class="tblwrap"><table class="tbl"><thead><tr><th>Company</th><th>Target segment</th><th>Core offer</th><th>Differentiator</th><th>Momentum</th></tr></thead><tbody>${
+      pm.map((p, i) => { p = p || {}; const you = i === 0 || String(p.company || '').toLowerCase() === c.you.toLowerCase();
+        return `<tr${you ? ' class="you"' : ''}><td>${esc(p.company)}${you ? ' (you)' : ''}</td><td>${esc(p.segment)}</td><td>${esc(p.core_offer)}</td><td>${esc(p.differentiator)}</td><td>${esc(p.momentum)}</td></tr>`; }).join('')}</tbody></table></div>`;
+  }
+  const op = arr(o.opportunities);
+  if (op.length) h += `<h3>Opportunities</h3><ul>${op.map(x => { x = x || {}; return `<li><b>${esc(x.opportunity)}.</b> ${esc(x.rationale)}</li>`; }).join('')}</ul>`;
+  const rs = arr(o.responses);
+  if (rs.length) h += `<h3>Recommended responses</h3><div class="tblwrap"><table class="tbl"><thead><tr><th>Response</th><th>Priority</th><th>Owner</th><th>Counters</th></tr></thead><tbody>${
+    rs.map(x => { x = x || {}; return `<tr><td>${esc(x.response)}</td><td>${esc(x.priority)}</td><td>${esc(x.owner)}</td><td>${esc(x.counters)}</td></tr>`; }).join('')}</tbody></table></div>`;
+  const w = arr(o.watch).filter(Boolean);
+  if (w.length) h += `<h3>Keep watching</h3><ul>${w.map(x => `<li>${esc(x)}</li>`).join('')}</ul>`;
+  const g = arr(o.coverage_gaps).filter(Boolean);
+  if (g.length) h += `<h3>Not covered by the pasted updates</h3><ul>${g.map(x => `<li>${esc(x)}</li>`).join('')}</ul>`;
+  h += sourcesHTML(c.comps);
+  r.innerHTML = h; enableOut();
+  if (window.innerWidth < 1000) r.scrollIntoView({behavior:'smooth', block:'start'});
+}
+function sourcesHTML(comps){
+  const n = comps.reduce((a, c) => a + c.updates.length, 0);
+  return `<details class="sources"><summary>Source updates (${n})</summary>${comps.map((c, i) => `<p><b>C${i + 1}: ${esc(c.name)}</b></p><ul>${c.updates.map((u, j) => `<li>[C${i + 1}.${j + 1}] ${esc(u)}</li>`).join('')}</ul>`).join('')}</details>`;
+}
+function enableOut(){ ['copyBtn','dlBtn','printBtn'].forEach(id => $(id).disabled = false); }
+
+/* ---------- markdown ---------- */
+function toMD(c){
+  const o = c.parsed, L = [];
+  const cell = v => String(v == null ? '' : v).replace(/\|/g, '\\|').replace(/\n/g, ' ');
+  L.push(`# ${o ? (o.headline || 'Competitive intelligence report') : 'Competitive intelligence report'}`, '');
+  L.push(`*For ${c.you} · ${c.period} · ${new Date().toISOString().slice(0, 10)}. Based only on pasted updates; not web verified.*`, '');
+  if (!o) L.push(c.raw, '');
+  else {
+    if (o.summary) L.push(o.summary, '');
+    const cs = arr(o.competitors);
+    if (cs.length){ L.push('## Competitor signals and threat level', '');
+      cs.forEach(x => { x = x || {}; L.push(`### ${x.name || ''}${x.threat_level ? ` (${x.threat_level} threat)` : ''}`, '');
+        if (x.positioning) L.push(`*${x.positioning}*`, '');
+        arr(x.signals).forEach(s => { s = s || {}; L.push(`- ${s.type ? `**${s.type}:** ` : ''}${s.signal || ''}${srcs(s.sources) ? ` [${srcs(s.sources)}]` : ''}`); });
+        if (x.threat_rationale) L.push('', `**Why this threat level:** ${x.threat_rationale}`);
+        L.push(''); }); }
+    const pm = arr(o.positioning_map);
+    if (pm.length){ L.push('## Positioning map', '', '| Company | Target segment | Core offer | Differentiator | Momentum |', '| --- | --- | --- | --- | --- |');
+      pm.forEach(p => { p = p || {}; L.push(`| ${cell(p.company)} | ${cell(p.segment)} | ${cell(p.core_offer)} | ${cell(p.differentiator)} | ${cell(p.momentum)} |`); }); L.push(''); }
+    const op = arr(o.opportunities);
+    if (op.length){ L.push('## Opportunities', ''); op.forEach(x => { x = x || {}; L.push(`- **${x.opportunity || ''}.** ${x.rationale || ''}`); }); L.push(''); }
+    const rs = arr(o.responses);
+    if (rs.length){ L.push('## Recommended responses', '', '| Response | Priority | Owner | Counters |', '| --- | --- | --- | --- |');
+      rs.forEach(x => { x = x || {}; L.push(`| ${cell(x.response)} | ${cell(x.priority)} | ${cell(x.owner)} | ${cell(x.counters)} |`); }); L.push(''); }
+    const w = arr(o.watch).filter(Boolean); if (w.length){ L.push('## Keep watching', ''); w.forEach(x => L.push(`- ${x}`)); L.push(''); }
+    const g = arr(o.coverage_gaps).filter(Boolean); if (g.length){ L.push('## Not covered by the pasted updates', ''); g.forEach(x => L.push(`- ${x}`)); L.push(''); }
+  }
+  L.push('## Source updates', '');
+  c.comps.forEach((cp, i) => { L.push(`**C${i + 1}: ${cp.name}**`, ''); cp.updates.forEach((u, j) => L.push(`- [C${i + 1}.${j + 1}] ${u.replace(/\n+/g, ' ')}`)); L.push(''); });
+  return L.join('\n');
+}
+$('copyBtn').addEventListener('click', async () => { if (!current) return; try { await navigator.clipboard.writeText(toMD(current)); toast('Markdown copied'); } catch(e){ toast('Copy failed. Use Download instead.'); } });
+$('dlBtn').addEventListener('click', () => {
+  if (!current) return;
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([toMD(current)], {type:'text/markdown'}));
+  a.download = `competitive-intel-${new Date().toISOString().slice(0, 10)}.md`;
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+});
+$('printBtn').addEventListener('click', () => window.print());
+window.addEventListener('beforeprint', () => document.querySelectorAll('.sources').forEach(d => { d.open = true; }));
+function toast(t){ const d = document.createElement('div'); d.className = 'toast'; d.setAttribute('role', 'status'); d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), 2000); }
+window.__report = { toMD: () => current && toMD(current) };
+})();
+</script>
+</body>
+</html>
